@@ -1,0 +1,59 @@
+{
+  "name": "aquaguard",
+  "version": "1.0.0",
+  "description": "AquaGuard 青羽守护 — Blender 自动存档看门狗",
+  "main": "src/main/main.js",
+  "author": "AquaGuard Studio",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64",
+    "dist:dir": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "com.aquaguard.watchdog",
+    "productName": "AquaGuard",
+    "copyright": "Copyright © 2026 AquaGuard",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/addon",
+        "to": "addon"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AquaGuard 青羽守护",
+      "artifactName": "AquaGuard-Setup-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+<title>AquaGuard 青羽守护</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= 左上品牌 ================= -->
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#04211f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3c3.5 4.2 6 7.2 6 10.2A6 6 0 0 1 6 13.2C6 10.2 8.5 7.2 12 3z" />
+        <path d="M9.5 13.5c0 1.6 1.1 2.8 2.5 2.8" />
+      </svg>
+    </div>
+    <div class="brand-name">青羽守护</div>
+  </div>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="topbar-title">
+      <strong id="topTitle">概览</strong>
+      <span id="topHint">Blender 自动存档看门狗</span>
+    </div>
+    <div class="topbar-right">
+      <div class="pill" id="pillServer"><i class="dot"></i><span>看门狗未启动</span></div>
+      <div class="pill" id="pillBlender"><i class="dot"></i><span>Blender 未连接</span></div>
+      <div class="win-btns">
+        <button class="win-btn" id="btnMin" title="最小化">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+        <button class="win-btn" id="btnMax" title="最大化">
+          <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.2" y="2.2" width="7.6" height="7.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="win-btn close" id="btnClose" title="最小化到托盘">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 左栏 ================= -->
+  <aside class="sidebar">
+    <div class="nav-label">工作台</div>
+    <div class="nav-item active" data-page="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+      <span>概览</span>
+    </div>
+    <div class="nav-item" data-page="snapshots">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg>
+      <span>快照</span>
+      <span class="badge" id="navSnapBadge">A/B/C</span>
+    </div>
+    <div class="nav-item" data-page="addon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3a2 2 0 1 0 4 0h1v6h-3a2 2 0 1 0 0 4h3v3H9v-3a2 2 0 1 0-4 0H4V7h3a2 2 0 1 0 0-3z"/></svg>
+      <span>Blender 插件</span>
+    </div>
+    <div class="nav-label" style="margin-top:14px">系统</div>
+    <div class="nav-item" data-page="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 14H3.5a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9.4A1.6 1.6 0 0 0 10.4 3.5V3.4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.1a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      <span>设置</span>
+    </div>
+    <div class="nav-item" data-page="logs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg>
+      <span>运行日志</span>
+    </div>
+    <div class="nav-item" data-page="about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.4"/></svg>
+      <span>关于</span>
+    </div>
+
+    <div class="sidebar-foot">
+      <div>状态：<b id="footState">初始化…</b></div>
+      <div>版本 v1.0.0</div>
+    </div>
+  </aside>
+
+  <!-- ================= 主内容 ================= -->
+  <main class="main">
+
+    <!-- 概览 -->
+    <section class="page active" id="page-overview">
+      <div class="page-head">
+        <div>
+          <div class="page-title">概览</div>
+          <div class="page-sub">守护你的 Blender 工程：定时快照、心跳监测、崩溃即恢复</div>
+        </div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn ghost" id="btnForceSnap">立即存档</button>
+          <button class="btn primary" id="btnToggleServer">停止看门狗</button>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="card metric">
+          <div class="metric-label">看门狗</div>
+          <div class="metric-value grad-text" id="mServer">运行中</div>
+          <div class="metric-foot" id="mPort">监听 127.0.0.1:47831</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Blender 连接</div>
+          <div class="metric-value grad-text" id="mConn">已连接</div>
+          <div class="metric-foot" id="mConnFoot">插件 v1.0 · Blender 4.2</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">存档节奏</div>
+          <div class="metric-value grad-text" id="mRhythm">2 分钟</div>
+          <div class="metric-foot" id="mRhythmFoot">每 60 秒下发 CF 指令</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">最近快照</div>
+          <div class="metric-value grad-text small" id="mLastSnap">C.blend</div>
+          <div class="metric-foot" id="mLastSnapFoot">刚刚 · 24.6 MB</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>心跳监测</div>
+          <div class="ring-wrap">
+            <div class="ring">
+              <svg width="148" height="148" viewBox="0 0 148 148">
+                <circle cx="74" cy="74" r="62" fill="none" stroke="rgba(0,229,208,0.12)" stroke-width="9" />
+                <circle id="ringBar" cx="74" cy="74" r="62" fill="none" stroke="url(#gradRing)" stroke-width="9"
+                        stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="0" />
+                <defs>
+                  <linearGradient id="gradRing" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#00e5d0" />
+                    <stop offset="100%" stop-color="#22c9e0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-center">
+                <div class="ring-num" id="ringNum">12</div>
+                <div class="ring-cap">秒前收到心跳</div>
+              </div>
+            </div>
+            <div class="ring-info">
+              <div class="kv"><span>连续丢失</span><span id="kvMiss">0 / 2 次</span></div>
+              <div class="kv"><span>CF 指令</span><span id="kvCf">已下发 0 次</span></div>
+              <div class="kv"><span>当前工程</span><span id="kvFile">—</span></div>
+              <div class="kv"><span>保护策略</span><span>每 10 秒存活检查，丢失 2 次即告警</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>快照轮转 A → B → C</div>
+          <div class="slot-list" id="overviewSlots"></div>
+          <div class="btn-row">
+            <button class="btn ghost" id="btnOpenSnapDir">打开快照文件夹</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 快照 -->
+    <section class="page" id="page-snapshots">
+      <div class="page-head">
+        <div>
+          <div class="page-title">快照</div>
+          <div class="page-sub">三份滚动快照 + 崩溃后的恢复文件（61.blend、62.blend …）</div>
+        </div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn ghost" id="btnRefreshSnap">刷新</button>
+          <button class="btn primary" id="btnForceSnap2">立即存档</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:0">
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>滚动快照（最多 3 份）</div>
+          <div class="slot-list" id="fullSlots"></div>
+          <div class="modal-note" style="margin-top:16px">
+            保存规则：新的写入 <span class="hl">C</span>，原 C 转 <span class="hl">B</span>，原 B 转 <span class="hl">A</span>；
+            再下一轮 C 被覆盖。任意时刻最多 3 份，磁盘占用可控。
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>恢复文件（重启后生成）</div>
+          <div class="rec-list" id="recList"></div>
+          <div class="btn-row">
+            <button class="btn ghost" id="btnOpenRecDir">打开恢复文件夹</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 插件 -->
+    <section class="page" id="page-addon">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Blender 插件</div>
+          <div class="page-sub">插件负责在 Blender 内部执行存档，并通过 TCP 与看门狗通信</div>
+        </div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn ghost" id="btnExportAddon">导出插件文件</button>
+          <button class="btn primary" id="btnInstallAddon">一键安装到 Blender</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:0">
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>三步接入</div>
+          <div class="steps">
+            <div class="step">
+              <div class="step-n">1</div>
+              <div class="step-body">
+                <b>导出插件</b>
+                <p>点右上角「导出插件文件」，会得到一个 <code>aqua_guard_addon.py</code>，存到桌面即可。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">2</div>
+              <div class="step-body">
+                <b>在 Blender 里安装</b>
+                <p>打开 Blender → <code>编辑 / Edit</code> → <code>偏好设置 / Preferences</code> → <code>插件 / Add-ons</code> →
+                  右上角 <code>安装 / Install</code>，选中刚导出的 py 文件。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-n">3</div>
+              <div class="step-body">
+                <b>勾选启用</b>
+                <p>在插件列表里找到 <code>AquaGuard 青羽守护</code>，勾选左侧开关。连接成功后本程序右上角会亮起「Blender 已连接」。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>通信说明</div>
+          <div class="kv"><span>协议</span><span>TCP · 本机回环</span></div>
+          <div class="kv"><span>监听地址</span><span id="addonAddr">127.0.0.1:47831</span></div>
+          <div class="kv"><span>看门狗 → 插件</span><span>CF 存档指令（每 60 秒）</span></div>
+          <div class="kv"><span>插件 → 看门狗</span><span>HB 心跳（每 60 秒）</span></div>
+          <div class="kv"><span>落盘节奏</span><span>每 2 分钟轮转一次快照</span></div>
+          <div class="kv"><span>断连判定</span><span>连续 2 次无心跳 → 询问重启</span></div>
+          <div class="modal-note" style="margin-top:14px">
+            插件也提供侧边栏面板：在 3D 视图按 <span class="hl">N</span> → 找到 <span class="hl">AquaGuard</span> 标签页，
+            可查看连接状态、手动存档、临时暂停守护。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="page" id="page-settings">
+      <div class="page-head">
+        <div>
+          <div class="page-title">设置</div>
+          <div class="page-sub">调整通信端口、存档节奏与开机行为</div>
+        </div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn primary" id="btnSaveCfg">保存设置</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="tick"></i>启动与守护</div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>开机自动启动</b>
+            <p>开机后自动在后台运行看门狗（最小化到托盘，不弹窗）。</p>
+          </div>
+          <div class="switch" id="swAutostart"></div>
+        </div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>心跳丢失时弹窗询问重启</b>
+            <p>连续 2 次没收到 Blender 心跳时，弹窗询问是否重启并恢复最新快照。</p>
+          </div>
+          <div class="switch on" id="swAskRestart"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title"><i class="tick"></i>节奏与通信</div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>通信端口</b>
+            <p>看门狗与 Blender 插件之间的 TCP 端口，默认 47831。改了端口后需重启插件。</p>
+          </div>
+          <input class="input" id="inpPort" type="number" value="47831" />
+        </div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>CF 指令间隔（秒）</b>
+            <p>看门狗向下发存档指令的频率，默认 60 秒一次。</p>
+          </div>
+          <input class="input" id="inpCf" type="number" value="60" />
+        </div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>实际落盘间隔</b>
+            <p>插件每收到 N 次 CF 才真正保存一次，默认 2 次 = 每 2 分钟一份快照。</p>
+          </div>
+          <input class="input" id="inpEvery" type="number" value="2" />
+        </div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>心跳间隔 / 断连阈值</b>
+            <p>插件每 10 秒发一次心跳；连续丢失 2 次（约 20 秒）判定为卡死。</p>
+          </div>
+          <input class="input" id="inpHb" type="number" value="10" style="width:110px" />
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title"><i class="tick"></i>存档与恢复</div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>备份目录</b>
+            <p>快照 A/B/C 与恢复文件（61.blend、62.blend…）都保存在这里。</p>
+          </div>
+          <button class="btn ghost" id="btnOpenBackupDir">打开备份目录</button>
+        </div>
+        <div class="setting">
+          <div class="setting-info">
+            <b>恢复方式</b>
+            <p>恢复时把最新快照复制一份到备份目录，直接用系统默认程序打开，无需配置 Blender 路径。</p>
+          </div>
+          <span class="tag">系统默认程序</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 日志 -->
+    <section class="page" id="page-logs">
+      <div class="page-head">
+        <div>
+          <div class="page-title">运行日志</div>
+          <div class="page-sub">实时记录看门狗与插件的每一次握手、存档与告警</div>
+        </div>
+        <div class="btn-row" style="margin:0">
+          <button class="btn ghost" id="btnClearLog">清空显示</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="log-box" id="logBox"></div>
+      </div>
+    </section>
+
+    <!-- 关于 -->
+    <section class="page" id="page-about">
+      <div class="page-head">
+        <div>
+          <div class="page-title">关于</div>
+          <div class="page-sub">AquaGuard 青羽守护 · Blender 自动存档看门狗</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:0">
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>它做什么</div>
+          <p style="font-size:13px;line-height:1.9;color:var(--text-dim)">
+            渲染大场景时 Blender 卡死、崩溃、断电，几小时的进度就没了。<br />
+            青羽守护在后台盯着 Blender：定时让它把工程写成三份滚动快照，
+            同时监测心跳。一旦 Blender 不再响应，会立刻问你要不要重启，
+            并自动把最新快照另存为 <span class="hl">61.blend、62.blend…</span> 再打开，
+            让你的文件从断点继续。
+          </p>
+          <div class="btn-row">
+            <button class="btn ghost" id="btnOpenLogFile">打开日志目录</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="tick"></i>版本信息</div>
+          <div class="kv"><span>程序版本</span><span>v1.0.0</span></div>
+          <div class="kv"><span>运行平台</span><span id="aboutPlatform">Windows</span></div>
+          <div class="kv"><span>通信协议</span><span>TCP 回环 · 行分隔 JSON</span></div>
+          <div class="kv"><span>快照格式</span><span>.blend（Blender 原生）</span></div>
+          <div class="kv"><span>数据位置</span><span id="aboutData">文档 / AquaGuard备份</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= 心跳告警弹窗 ================= -->
+<div class="overlay" id="alarmOverlay">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffcc66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 4.3 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/>
+        <path d="M12 9.5v4.2M12 17v.3"/>
+      </svg>
+    </div>
+    <h3>Blender 好像卡住了</h3>
+    <p>
+      已经连续 <span class="hl" id="alarmMiss">2</span> 次没有收到心跳，最后一次响应在
+      <span class="hl" id="alarmSilent">128 秒</span>前。
+      这通常意味着 Blender 正在卡死、崩溃或者已经退出。
+    </p>
+    <div class="modal-note">
+      选择「重启并恢复」，我会先把最新快照另存为恢复文件（<span class="hl">61.blend</span> 起递增），
+      结束卡死的 Blender，再用新进程打开这份文件 —— 你的进度不会丢。
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnAlarmIgnore">先不管</button>
+      <button class="btn primary" id="btnAlarmRestart">重启并恢复</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="demo-flag" id="demoFlag">界面预览模式（未连接主程序）</div>
+
+<!-- ================= 开机恢复弹窗（上次意外关闭） ================= -->
+<div class="overlay" id="startupOverlay">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00e5d0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>
+      </svg>
+    </div>
+    <h3>上次 Blender 好像没正常收尾</h3>
+    <p>
+      检测到上次关机或强制结束时 Blender 还在运行，可能有一份工程没保存。
+      我找到的最新快照是 <span class="hl" id="startupSnap">C.blend</span>。
+    </p>
+    <div class="modal-note">
+      点「打开」会把这份快照另存为恢复文件（61.blend 起递增）并用 Blender 打开；点「不用了」则什么都不做。
+      无论选哪个，下次开机都不会再问。
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnStartupNo">不用了</button>
+      <button class="btn primary" id="btnStartupYes">打开</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

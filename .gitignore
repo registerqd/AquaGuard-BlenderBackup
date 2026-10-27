@@ -147,3 +147,11 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Python 缓存（Blender 插件运行时生成，不要提交）
+__pycache__/
+*.py[cod]
+
+# 打包产物
+dist/
+release/

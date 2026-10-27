@@ -5,11 +5,11 @@
 ;       （生成 dist\win-unpacked\ 目录）
 ;    2. 用 Inno Setup 6 打开本文件，点 Build → Compile
 ;       或在命令行执行  ISCC.exe build\installer.iss
-;    3. 产物：dist\AquaGuard-Setup-1.0.0.exe
+;    3. 产物：dist\AquaGuard-Setup-1.1.0.exe
 ; ============================================================
 
 #define MyAppName "AquaGuard 青羽守护"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "AquaGuard Studio"
 #define MyAppExeName "AquaGuard.exe"
 #define MyAppId "{{7C4A9E20-9F2B-4C7D-8E31-5B6A0D3F1C88}"

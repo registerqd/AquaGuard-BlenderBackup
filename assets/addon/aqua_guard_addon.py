@@ -19,7 +19,7 @@ AquaGuard 青羽守护 — Blender 端插件
 bl_info = {
     "name": "AquaGuard 青羽守护",
     "author": "AquaGuard Studio",
-    "version": (1, 0, 1),
+    "version": (1, 1, 0),
     "blender": (2, 93, 0),
     "location": "3D 视图 → 侧边栏(N) → AquaGuard",
     "description": "定时滚动快照 + 心跳上报，配合 AquaGuard 看门狗防止 Blender 崩溃丢文件",
@@ -306,16 +306,18 @@ class AquaGuardClient:
         path_c = os.path.join(folder, "C.blend")
 
         try:
-            # 1. C → B（先删旧 B）
-            if os.path.exists(path_c):
-                if os.path.exists(path_b):
-                    os.remove(path_b)
-                shutil.move(path_c, path_b)
-            # 2. B → A（先删旧 A）
+            # 1. B → A（先删旧 A）：最老的一份被覆盖
             if os.path.exists(path_b):
                 if os.path.exists(path_a):
                     os.remove(path_a)
                 shutil.move(path_b, path_a)
+            # 2. C → B（先删旧 B）：上一次的快照退到 B
+            #    顺序不能反：若先把 C 移到 B 再立刻把 B 移到 A，
+            #    B 槽会被搬空，实际只剩 A、C 两份历史。
+            if os.path.exists(path_c):
+                if os.path.exists(path_b):
+                    os.remove(path_b)
+                shutil.move(path_c, path_b)
             # 3. 写入新的 C
             bpy.ops.wm.save_as_mainfile(filepath=path_c, copy=True, check_existing=False)
             self.snapshot_count += 1

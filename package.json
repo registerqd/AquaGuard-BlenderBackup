@@ -1,6 +1,6 @@
 {
   "name": "aquaguard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AquaGuard 青羽守护 — Blender 自动存档看门狗",
   "main": "src/main/main.js",
   "author": "AquaGuard Studio",

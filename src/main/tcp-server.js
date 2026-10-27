@@ -41,6 +41,11 @@ class WatchdogServer extends EventEmitter {
 
     this._cfTimer = null;
     this._checkTimer = null;
+
+    // 告警前的连通性探测：先用 PING 确认是真卡死，还是只是这一拍慢了
+    this.pinging = false;
+    this.pingSentAt = 0;
+    this.pingTimeout = 3000;
   }
 
   configure(opts) {
@@ -95,6 +100,7 @@ class WatchdogServer extends EventEmitter {
     this.clientInfo = null;
     this.alarm = false;
     this.missed = 0;
+    this.pinging = false;
     logger.info('看门狗已停止');
     this.emit('state');
     return { ok: true };
@@ -131,6 +137,19 @@ class WatchdogServer extends EventEmitter {
     return true;
   }
 
+  /** 告警前发一次 PING，用来区分「真卡死」和「只是这一拍慢了」 */
+  _sendPing() {
+    if (!this.clients.size) return false;
+    this.clients.forEach((s) => {
+      try {
+        s.write('PING\n');
+      } catch (e) {
+        /* 单个连接写失败忽略 */
+      }
+    });
+    return true;
+  }
+
   _checkHeartbeat() {
     if (!this.connected) return;
     const base = this.lastHeartbeat || this.connectedAt;
@@ -141,14 +160,24 @@ class WatchdogServer extends EventEmitter {
     this.missed = Math.max(0, missed);
 
     if (this.missed >= this.missLimit && !this.alarm) {
-      this.alarm = true;
-      logger.error(`连续 ${this.missed} 次未收到 Blender 心跳，疑似卡死或已崩溃`);
-      this.emit('alarm', {
-        missed: this.missed,
-        silentSeconds: Math.round(elapsed / 1000),
-        lastHeartbeat: this.lastHeartbeat,
-        clientInfo: this.clientInfo
-      });
+      if (!this.pinging) {
+        // 先发一次 PING 探测。Blender 主线程在跑重活（渲染、保存超大文件、
+        // 复杂修改器）时，心跳可能只是慢了一拍，直接告警会让人误杀正在渲染的进程。
+        this.pinging = true;
+        this.pingSentAt = Date.now();
+        this._sendPing();
+        logger.warn(`已 ${this.missed} 次未收到 Blender 心跳，先发 PING 探测`);
+      } else if (Date.now() - this.pingSentAt >= this.pingTimeout) {
+        this.pinging = false;
+        this.alarm = true;
+        logger.error(`连续 ${this.missed} 次未收到 Blender 心跳，PING 探测无响应，疑似卡死或已崩溃`);
+        this.emit('alarm', {
+          missed: this.missed,
+          silentSeconds: Math.round(elapsed / 1000),
+          lastHeartbeat: this.lastHeartbeat,
+          clientInfo: this.clientInfo
+        });
+      }
     }
     if (changed) this.emit('state');
   }
@@ -200,6 +229,7 @@ class WatchdogServer extends EventEmitter {
   _onLine(line, socket) {
     if (line === 'PONG') {
       this.lastHeartbeat = Date.now();
+      this.pinging = false;
       return;
     }
     let msg = null;
@@ -226,6 +256,7 @@ class WatchdogServer extends EventEmitter {
     } else if (msg.type === 'hb') {
       this.lastHeartbeat = Date.now();
       this.missed = 0;
+      this.pinging = false;
       if (this.alarm) {
         this.alarm = false;
         logger.success('心跳已恢复，告警解除');

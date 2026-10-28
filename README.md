@@ -1,165 +1,137 @@
-# AquaGuard 青羽守护
+# AquaGuard 青羽守护 — Blender Crash Recovery Watchdog
 
-> Blender 自动存档看门狗 —— 卡死、崩溃、断电都不再丢工程
+<p align="center">
+  <img src="界面预览.png" alt="AquaGuard 界面预览" width="820" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+</p>
 
-一个青碧色玻璃拟态的桌面程序：在后台守着你的 Blender，定时让它写滚动快照、盯着心跳；
-一旦 Blender 不再响应，弹窗问你要不要重启，并自动把最新快照另存为 `61.blend`、`62.blend`… 再打开。
+<p align="center">
+  <a href="#english"><img src="https://img.shields.io/badge/Language-English-16a3a8.svg" alt="English"></a>
+  <a href="#中文说明"><img src="https://img.shields.io/badge/语言-简体中文-0f6d75.svg" alt="中文"></a>
+  <img src="https://img.shields.io/badge/Version-v1.1.0-blue.svg" alt="Version 1.1.0">
+  <img src="https://img.shields.io/badge/Blender-2.93%20--%204.x-orange.svg" alt="Blender Support">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT">
+</p>
 
----
-
-## 一、它怎么工作
-
-```
-┌────────────────────────┐        TCP 127.0.0.1:47831        ┌──────────────────────┐
-│   AquaGuard 看门狗      │ ─────── CF 存档指令（每 60 秒）──► │  Blender 插件         │
-│   （Electron 桌面程序） │ ◄────── HB 心跳（每 60 秒）────── │  （.py 插件）         │
-└────────────────────────┘                                   └──────────────────────┘
-          │                                                             │
-          │ 连续 2 次收不到心跳 → 弹窗询问重启                          │ 每收到 2 次 CF
-          ▼                                                             ▼
-   把最新快照另存为 61.blend、62.blend… → 结束卡死的 Blender → 用新进程打开    写入 C.blend
-                                                                      原 C → B.blend
-                                                                      原 B → A.blend
-```
-
-### 三个关键节奏
-
-| 项目 | 默认值 | 说明 |
-| --- | --- | --- |
-| CF 存档指令 | 每 60 秒 | 看门狗告诉插件「该存档了」 |
-| 实际落盘 | 每 2 分钟 | 插件每收到 2 次 CF 才真正写一次快照 |
-| 心跳上报 | 每 10 秒 | 插件告诉看门狗「我还活着」（存活检查） |
-| 断连判定 | 连续 2 次 | 约 20 秒没心跳 → 判定卡死并弹窗 |
-
-### 快照轮转规则（最多 3 份）
-
-```
-新快照 → C.blend        原 C → B.blend        原 B → A.blend        原 A 被删除
-```
-
-任何时刻磁盘上最多 3 份快照，占用可控；恢复时自动挑**最新**的那一份。
-
-### 恢复文件编号
-
-重启恢复时，最新快照会被复制到「文档 / AquaGuard备份」，从 `61.blend` 开始递增
-（61、62、63 …），然后用 Blender 打开，让你从断点继续。
+> **Never lose a Blender project to a crash, freeze, or sudden power outage again.**  
+> 跑在 Blender **外部**的轻量看门狗程序：A/B/C 三槽轮转快照 + 独立线程 TCP 心跳 + PING 探针防误杀。
 
 ---
 
-## 二、安装与使用
+<a name="english"></a>
+## English
 
-### 1. 安装主程序
+### What is AquaGuard?
 
-- **方式 A（安装包）**：双击 `AquaGuard-Setup-1.0.0.exe`，一路下一步。
-  安装向导里建议勾选「开机自动启动」。
-- **方式 B（绿色版）**：直接运行 `dist\win-unpacked\AquaGuard.exe`。
+AquaGuard is a lightweight desktop watchdog that runs **completely outside of Blender**. It maintains rolling project snapshots and monitors a live heartbeat over a local TCP connection. When Blender freezes, crashes, or the machine suddenly loses power, your work is already safely written to disk.
 
-启动后窗口右上角会显示两个状态：**看门狗运行中** / **Blender 已连接**。
+### Built for My Dad
 
-### 2. 安装 Blender 插件
+My dad sculpts figurines in Blender — complex models with tens of thousands of faces. Out-of-memory crashes and freezes used to happen regularly, meaning hours of sculpting were wiped out in an instant. So I built this watchdog for him.
 
-1. 在程序里点「Blender 插件」页 → **导出插件文件**，得到 `aqua_guard_addon.py`。
-2. Blender → `编辑` → `偏好设置` → `插件` → 右上角 `安装`，选中该文件。
-3. 在插件列表里找到 **AquaGuard 青羽守护**，勾选启用。
-4. 回到主程序，右上角「Blender 已连接」亮起即成功。
+Now, whenever Blender locks up, he simply terminates the hung process and restarts. The watchdog immediately detects the state, stages the latest snapshot, and reopens it. The fear of "when was my last save?" is completely gone.
 
-也可以直接点「一键安装到 Blender」，程序会自动把插件复制到 Blender 插件目录
-（仍需在 Blender 里勾选启用）。
+### Proven by a Real 5-Hour Power Cut
 
-### 3. 插件面板
+During a 5-hour continuous modeling session, my computer suddenly lost power. Upon rebooting, AquaGuard launched with the system, detected the ungraceful shutdown flag, and prompted: *"Would you like to recover your project?"*
 
-Blender 3D 视图里按 `N` → 侧边栏找到 **AquaGuard** 标签页：
+The entire scene was restored from the latest snapshot without a single byte lost. It asks exactly once, updates the state flag, and stays silent on future boots.
 
-- 查看连接状态、快照次数
-- **立即存档**：不等下一轮 CF，马上写一份
-- **暂停 / 继续**：暂停自动落盘（心跳照常上报）
-- **重新连接**、**打开快照文件夹**
+### How Reliable Is It?
+
+> **Worst case: you lose the last 2 minutes — not the last 5 hours.**
+
+The watchdog dispatches a snapshot command (`CF`) every 60 seconds. The add-on persists a snapshot every 2 commands (default: 2 minutes). Three snapshots (`A.blend`, `B.blend`, `C.blend`) rotate on disk, ensuring disk space remains bounded (~3× project size) while keeping 3 historical recovery points.
+
+### Why Not Just Use Blender's Built-in Autosave or Add-ons?
+
+When Blender crashes, **everything running inside the Blender process dies with it**.
+
+| Feature | Blender AutoSave | Regular Add-on | AquaGuard Watchdog |
+|---|---|---|---|
+| **Process Isolation** | ❌ Dies with Blender | ❌ Dies with Blender | ✅ **External watchdog process** |
+| **Sudden Power Outage** | ⚠️ Often corrupt or outdated | ❌ In-memory state lost | ✅ **Flagged on startup & 1-click recovery** |
+| **Silent Freeze / Hang** | ❌ Cannot detect itself | ❌ Thread blocked | ✅ **Heartbeat timeout + PING probe** |
+| **Recovery Workflow** | ⚠️ Hunt through `File -> Recover` | ⚠️ Manual file copying | ✅ **Native modal -> Auto-open `61.blend...`** |
+| **History Retention** | Overwritten or temp wiped | Variable | ✅ **Guaranteed A/B/C rotation** |
+
+### How It Works
+
+```text
+┌────────────────────────┐     TCP 127.0.0.1:47831      ┌────────────────────────┐
+│   AquaGuard Watchdog   │ ─── Save Command (60s) ────► │     Blender Add-on     │
+│  (Desktop Background)  │ ◄─── Heartbeat (10s) ─────── │  (Dedicated NetThread) │
+└────────────────────────┘                              └────────────────────────┘
+            │                                                        │
+            │  Missed ≥ 2 Heartbeats                                 │ Every 2 Commands:
+            │  -> Dispatches PING Probe                              ▼
+            │  -> Still silent?                                 Persist C.blend
+            ▼                                                   Rotate C -> B -> A
+     Native Alert Dialog                                        (Max 3 snapshots)
+            │
+            ├─► Click [Recover Now]:
+            │     Terminate hung Blender -> Copy latest snapshot to 61.blend -> Auto Open
+            └─► Click [Ignore]:
+                  Suppresses alarm and resets timer
+```
+
+### Installation
+
+#### 1. Watchdog App (Windows)
+- Download `AquaGuard_Setup_1.1.0.exe` (or unpack `AquaGuard_Setup_1.1.0.zip`).
+- Follow the wizard. Enabling **Launch at startup** is recommended.
+
+#### 2. Blender Add-on
+1. Open AquaGuard, navigate to the **Blender Add-on** tab, and click **Export Add-on**.
+2. In Blender: `Edit -> Preferences -> Add-ons -> Install...`, select `aqua_guard_addon.py` (or zip), and check the box to enable **AquaGuard**.
+3. Press `N` in the 3D Viewport to find the **AquaGuard** sidebar panel.
 
 ---
 
-## 三、自己打包成 exe 安装包（最简单）
+<a name="中文说明"></a>
+## 中文说明
 
-**双击 `一键打包.bat`，等它跑完就行。** 全程不用装任何东西：
+### 核心亮点
 
-1. 自动检测 Node.js，没有就自动下载免安装版（约 30MB）
-2. 自动安装依赖（会下载 Electron，3-5 分钟）
-3. 自动打包并生成安装包
-4. 完成后自动弹出文件夹，里面就是 `AquaGuard-Setup-1.0.0.exe`
+- **独立进程守护**：Blender 就算崩成白屏、无响应或直接闪退，外部看门狗依然存活。
+- **A / B / C 三槽轮转快照**：磁盘空间始终恒定（仅占 3 份工程体积），最老的一份自动淘汰，永远保留最新三档进度。
+- **PING 探针防误杀**：Blender 在高负荷烘焙、重度渲染或存大文件时主线程易卡顿，看门狗在告警前主动发送 PING 探测，插件响应即解除，绝不误杀正在渲染的工程。
+- **开机断电自愈**：断电关机前标记会话；下次开机自启弹窗询问是否打开断电前工程，确认后自动按 `61.blend`、`62.blend`… 递增另存，原工程零污染。
+- **无缝打开**：无需配置 Blender 安装路径，直接调用系统关联默认程序启动恢复文件。
 
-双击那个 exe 就能装到任何一台 Windows 电脑上（有桌面快捷方式、开始菜单、卸载项）。
+### 怎么使用
 
-> 需要联网。首次运行较慢（要下载约 250MB），之后再次打包会快很多。
+1. **运行主程序**：双击运行安装包安装并启动 AquaGuard，托盘常驻。
+2. **安装插件**：在主程序「Blender 插件」页点击导出，在 Blender「偏好设置 → 插件」里安装并启用。
+3. **日常工作**：像平时一样在 Blender 中建模、雕刻、渲染。3D 视图按 `N` 键可在侧边栏查看心跳与快照状态，也可随时手动点击「立即快照」。
+4. **遇险恢复**：一旦遭遇崩溃或卡死，系统级原生弹窗自动置顶弹出，点击「立即恢复」即可一键拉起最新快照继续工作。
 
-### 想用 Inno Setup 打包（可选）
+### 存储路径
 
-若你更习惯 Inno Setup：先跑一次 `一键打包.bat` 生成 `dist\win-unpacked`，
-再用 Inno Setup 6 打开 `build\installer.iss` 点 Build 即可，产物同样是安装包 exe。
+| 文件类型 | 默认存放位置 |
+|---|---|
+| **轮转快照（A/B/C）** | `我的文档\AquaGuard备份\` |
+| **灾后恢复文件（61/62...）** | `我的文档\AquaGuard备份\` |
+| **程序配置文件** | `%APPDATA%\AquaGuard\config.json` |
+| **运行日志** | `%APPDATA%\AquaGuard\logs\aquaguard.log` |
 
-开发调试：
+---
+
+## 开发者自建（Build from Source）
+
+本项目基于 Electron + Node.js 与 Python Blender API 开发，Windows 下支持一键全自动打包：
 
 ```bat
+# 方式 A：一键无依赖打包（自动下载免安装 Node.js 与依赖）
+双击运行 "一键打包.bat"
+
+# 方式 B：常规开发运行
+npm install
 npm start
+
+# 方式 C：构建安装包
+npm run dist:win
 ```
 
----
+## 开源协议
 
-## 四、目录结构
-
-```
-AquaGuard/
-├── package.json                 依赖与 electron-builder 配置
-├── build_win.bat                Windows 一键打包
-├── build/
-│   ├── installer.iss            Inno Setup 打包脚本
-│   ├── icon.ico / icon.png      应用图标
-│   └── tray.png                 托盘图标
-├── src/
-│   ├── main/                    Electron 主进程
-│   │   ├── main.js              窗口、托盘、IPC、重启恢复流程
-│   │   ├── tcp-server.js        TCP 看门狗（CF 下发 / 心跳检测 / 告警）
-│   │   ├── snapshot.js          A/B/C 快照与恢复文件读取
-│   │   ├── blender.js           Blender 探测、结束进程、启动并打开文件
-│   │   ├── autostart.js         开机自启（Win/mac/Linux）
-│   │   ├── config.js            配置读写
-│   │   ├── logger.js            运行日志
-│   │   └── preload.js           安全桥接
-│   └── renderer/                界面（左栏 + 顶栏，青碧玻璃拟态）
-│       ├── index.html
-│       ├── style.css
-│       └── app.js
-└── assets/addon/
-    └── aqua_guard_addon.py      Blender 插件源码
-```
-
----
-
-## 五、数据与路径
-
-| 内容 | 位置 |
-| --- | --- |
-| 滚动快照 A/B/C | `文档/AquaGuard备份/` |
-| 恢复文件 61、62… | `文档/AquaGuard备份/` |
-| 程序配置 | `%APPDATA%/AquaGuard/config.json` |
-| 运行日志 | `%APPDATA%/AquaGuard/logs/aquaguard.log` |
-
-插件端的快照目录可以在 Blender 插件偏好设置里改（留空即用上面的默认值）。
-
----
-
-## 六、常见问题
-
-**Q：插件装了但主程序显示未连接？**
-检查端口是否一致（默认 47831），并确认主程序的「看门狗运行中」。改过端口后要在 Blender 里禁用再启用插件。
-
-**Q：提示端口被占用？**
-到「设置」换一个端口（如 47832），保存后在 Blender 插件偏好设置里改成同一个端口，重启插件。
-
-**Q：恢复后没有自动打开 Blender？**
-到「设置 → Blender 可执行文件」手动填写路径，例如
-`C:\Program Files\Blender Foundation\Blender 4.2\blender.exe`。
-
-**Q：会不会误杀我正在跑的渲染？**
-只有你在弹窗里点「重启并恢复」，程序才会结束 Blender 进程；点「先不管」则什么都不做。
-
-**Q：快照会不会很占磁盘？**
-最多 3 份（A/B/C），总量约等于 3 倍工程文件大小，旧的自动覆盖。
+本项目采用 [MIT License](LICENSE) 开源。欢迎提交 PR 与 Issue！

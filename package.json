@@ -7,8 +7,10 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win --x64",
-    "dist:dir": "electron-builder --win --dir"
+    "dist:win": "electron-builder --win nsis zip --x64",
+    "dist:linux": "electron-builder --linux AppImage tar.gz --x64",
+    "dist:mac": "electron-builder --mac dmg zip --arm64",
+    "dist:all": "electron-builder -mwl"
   },
   "build": {
     "appId": "com.aquaguard.watchdog",
@@ -36,10 +38,17 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "artifactName": "AquaGuard_Setup_${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -49,7 +58,27 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "AquaGuard 青羽守护",
-      "artifactName": "AquaGuard-Setup-${version}.${ext}"
+      "artifactName": "AquaGuard_Setup_${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "tar.gz"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "maintainer": "AquaGuard Studio",
+      "artifactName": "AquaGuard-${version}-linux-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.utilities",
+      "identity": null,
+      "artifactName": "AquaGuard-${version}-mac-${arch}.${ext}"
     }
   },
   "devDependencies": {

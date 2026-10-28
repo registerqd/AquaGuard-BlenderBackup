@@ -1,0 +1,109 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to publish (e.g. v1.2.0)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            artifact: windows
+          - os: ubuntu-22.04
+            platform: linux
+            artifact: linux
+          - os: macos-latest
+            platform: mac
+            artifact: macos
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Windows)
+        if: matrix.platform == 'win'
+        run: npx electron-builder --win nsis zip --x64 --publish never
+
+      - name: Build (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          npx electron-builder --linux AppImage tar.gz --x64 --publish never
+          chmod +x dist/*.AppImage || true
+
+      - name: Build (macOS)
+        if: matrix.platform == 'mac'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac dmg zip --arm64 --publish never
+
+      - name: Generate checksums
+        shell: bash
+        run: |
+          cd dist
+          sha256sum *.exe *.zip *.AppImage *.tar.gz *.dmg 2>/dev/null > SHA256SUMS.txt || true
+          cat SHA256SUMS.txt || echo "no artifacts"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AquaGuard-${{ matrix.artifact }}
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.tar.gz
+            dist/*.dmg
+            dist/SHA256SUMS.txt
+          if-no-files-found: warn
+
+  release:
+    name: Publish Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect files
+        shell: bash
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.exe' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.tar.gz' -o -name '*.dmg' -o -name 'SHA256SUMS.txt' \) -exec cp {} release/ \;
+          ls -lh release
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

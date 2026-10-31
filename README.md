@@ -1,7 +1,7 @@
 # AquaGuard — Blender Crash Recovery Watchdog
 
 <p align="center">
-  <img src="界面预览.png" alt="AquaGuard interface" width="820" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+  <img src="assets/aquaguard-demo.gif" alt="AquaGuard demo — heartbeat monitor, rotating A/B/C snapshots, recovery after a Blender freeze" width="880" style="max-width: 100%; border-radius: 8px;" />
 </p>
 
 <p align="center">
@@ -34,6 +34,10 @@
 | **macOS (Apple Silicon)** | [`AquaGuard-macos-arm64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard-macos-arm64.tar.gz) | Portable, ~93 MB |
 
 All releases: [github.com/registerqd/AquaGuard-BlenderBackup/releases](https://github.com/registerqd/AquaGuard-BlenderBackup/releases)
+
+<p align="center">
+  <img src="界面预览.png" alt="AquaGuard interface" width="820" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+</p>
 
 ---
 

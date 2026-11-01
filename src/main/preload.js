@@ -16,6 +16,20 @@ contextBridge.exposeInMainWorld('aqua', {
   getConfig: () => ipcRenderer.invoke('cfg:get'),
   setConfig: (patch) => ipcRenderer.invoke('cfg:set', patch),
 
+  // 增量快照 / 多工程
+  listProjects: () => ipcRenderer.invoke('project:list'),
+  listSnapshots: (blendPath) => ipcRenderer.invoke('snap:list', blendPath),
+  restoreSnapshot: (blendPath, manifestFile) => ipcRenderer.invoke('snap:restore', blendPath, manifestFile),
+  diffSnapshots: (blendPath, a, b) => ipcRenderer.invoke('snap:diff', blendPath, a, b),
+  snapshotStats: (blendPath) => ipcRenderer.invoke('snap:stats', blendPath),
+  gcSnapshots: (blendPath) => ipcRenderer.invoke('snap:gc', blendPath),
+
+  // 资源占用 / 崩溃现场
+  getMonitor: () => ipcRenderer.invoke('monitor:get'),
+  getEvents: (limit) => ipcRenderer.invoke('monitor:events', limit),
+  listCrashes: () => ipcRenderer.invoke('crash:list'),
+  dumpCrash: () => ipcRenderer.invoke('crash:dump'),
+
   // 动作
   startServer: () => ipcRenderer.invoke('server:start'),
   stopServer: () => ipcRenderer.invoke('server:stop'),

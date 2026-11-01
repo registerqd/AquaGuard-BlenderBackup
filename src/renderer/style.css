@@ -1119,3 +1119,71 @@ code,
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   快照浏览器 / 资源占用 / 崩溃现场
+   ============================================================ */
+
+.snap-timeline {
+  margin-top: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.snap-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.snap-item:hover { border-color: var(--line-strong); }
+.snap-item.selected { border-color: var(--cyan); background: rgba(0, 229, 208, 0.08); }
+
+.snap-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cyan); flex: 0 0 auto;
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.snap-main { flex: 1; min-width: 0; }
+.snap-time { font-size: 13px; color: var(--text); }
+.snap-meta { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+.snap-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 8px;
+  background: rgba(0, 229, 208, 0.12); color: var(--cyan);
+}
+.snap-act {
+  font-size: 12px; padding: 5px 12px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: transparent;
+  color: var(--cyan); cursor: pointer;
+}
+.snap-act:hover { background: var(--cyan); color: var(--bg-deep); }
+
+.diff-box { margin-top: 12px; font-size: 13px; line-height: 1.9; }
+.diff-box .add { color: var(--ok); }
+.diff-box .del { color: var(--danger); }
+.diff-box .same { color: var(--text-mute); }
+
+.res-bar {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text-dim);
+}
+.res-bar b { color: var(--cyan); font-weight: 600; }
+
+.crash-item {
+  padding: 10px 14px; border-radius: 12px; margin-bottom: 8px;
+  background: rgba(255, 107, 129, 0.08);
+  border: 1px solid rgba(255, 107, 129, 0.25);
+  font-size: 12px;
+}
+.crash-item b { color: var(--danger); }
+

@@ -46,6 +46,9 @@ class WatchdogServer extends EventEmitter {
     this.pinging = false;
     this.pingSentAt = 0;
     this.pingTimeout = 3000;
+
+    // 多工程：每个 Blender 实例一条独立会话，各自记录工程与心跳
+    this.sessions = new Map(); // socket -> session
   }
 
   configure(opts) {
@@ -193,7 +196,27 @@ class WatchdogServer extends EventEmitter {
     this.alarm = false;
     this.normalExit = false;
     this.clientInfo = { address: socket.remoteAddress, since: Date.now() };
-    logger.success('Blender 插件已连接');
+
+    // 每个连接一条独立会话：多开 Blender 时互不干扰
+    const session = {
+      id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      address: socket.remoteAddress,
+      since: Date.now(),
+      blender: '',
+      file: '',
+      scene: '',
+      project: '',
+      unsaved: false,
+      lastHeartbeat: Date.now(),
+      missed: 0,
+      alarm: false,
+      lastSaved: null,
+      snapshots: 0
+    };
+    this.sessions.set(socket, session);
+    socket._aquaSession = session;
+
+    logger.success(`Blender 插件已连接（会话 ${session.id}）`);
     this.emit('state');
 
     let buffer = '';
@@ -227,9 +250,11 @@ class WatchdogServer extends EventEmitter {
   }
 
   _onLine(line, socket) {
+    const sess = socket && socket._aquaSession;
     if (line === 'PONG') {
       this.lastHeartbeat = Date.now();
       this.pinging = false;
+      if (sess) { sess.lastHeartbeat = Date.now(); sess.missed = 0; }
       return;
     }
     let msg = null;
@@ -246,6 +271,14 @@ class WatchdogServer extends EventEmitter {
       this.lastHeartbeat = Date.now();
       this.missed = 0;
       this.alarm = false;
+      if (sess) {
+        sess.blender = msg.blender || '';
+        sess.file = msg.file || '';
+        sess.scene = msg.scene || '';
+        sess.project = msg.project || msg.file || '';
+        sess.lastHeartbeat = Date.now();
+        sess.missed = 0;
+      }
       logger.info(`插件握手：Blender ${msg.blender || '未知版本'}${msg.file ? '，当前文件 ' + msg.file : ''}`);
       // 回执，让插件知道握手成功
       try {
@@ -266,6 +299,15 @@ class WatchdogServer extends EventEmitter {
         this.clientInfo.scene = msg.scene || this.clientInfo.scene;
         this.clientInfo.unsaved = !!msg.unsaved;
       }
+      if (sess) {
+        sess.lastHeartbeat = Date.now();
+        sess.missed = 0;
+        sess.alarm = false;
+        sess.file = msg.file || sess.file;
+        sess.scene = msg.scene || sess.scene;
+        sess.project = msg.project || msg.file || sess.project;
+        sess.unsaved = !!msg.unsaved;
+      }
     } else if (msg.type === 'saved') {
       this.lastSaved = {
         slot: msg.slot || 'C',
@@ -274,6 +316,11 @@ class WatchdogServer extends EventEmitter {
         time: Date.now(),
         project: msg.project || ''
       };
+      if (sess) {
+        sess.lastSaved = this.lastSaved;
+        sess.snapshots += 1;
+        sess.project = msg.project || sess.project;
+      }
       logger.success(`快照已保存到 ${this.lastSaved.slot}.blend（${(this.lastSaved.size / 1024 / 1024).toFixed(2)} MB）`);
     } else if (msg.type === 'bye') {
       this.normalExit = true;
@@ -285,13 +332,28 @@ class WatchdogServer extends EventEmitter {
 
   getState() {
     const base = this.lastHeartbeat || this.connectedAt;
+    const now = Date.now();
+    const sessions = Array.from(this.sessions.values()).map((s) => ({
+      id: s.id,
+      blender: s.blender,
+      file: s.file,
+      scene: s.scene,
+      project: s.project,
+      unsaved: s.unsaved,
+      since: s.since,
+      silentSeconds: Math.round((now - (s.lastHeartbeat || s.since)) / 1000),
+      missed: s.missed,
+      alarm: s.alarm,
+      snapshots: s.snapshots,
+      lastSaved: s.lastSaved
+    }));
     return {
       running: !!this.server,
       port: this.port,
       connected: this.connected,
       clientInfo: this.clientInfo,
       lastHeartbeat: this.lastHeartbeat,
-      silentSeconds: base ? Math.round((Date.now() - base) / 1000) : 0,
+      silentSeconds: base ? Math.round((now - base) / 1000) : 0,
       missed: this.missed,
       missLimit: this.missLimit,
       alarm: this.alarm,
@@ -300,7 +362,9 @@ class WatchdogServer extends EventEmitter {
       lastCfAt: this.lastCfAt,
       cfInterval: this.cfInterval,
       heartbeatInterval: this.heartbeatInterval,
-      lastSaved: this.lastSaved
+      lastSaved: this.lastSaved,
+      sessions: sessions,
+      sessionCount: sessions.length
     };
   }
 }

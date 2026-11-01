@@ -154,8 +154,9 @@ class AquaGuardClient:
                 "type": "hello",
                 "blender": bpy.app.version_string,
                 "file": bpy.data.filepath or "(未保存)",
+                "project": bpy.data.filepath or "",
                 "platform": os.name,
-                "plugin": "1.0.0",
+                "plugin": "1.3.0",
             })
             self._start_heartbeat()
         except Exception as e:
@@ -188,10 +189,11 @@ class AquaGuardClient:
         self._send_json({
             "type": "hb",
             "file": info.get("file") or "(未保存)",
+            "project": info.get("project") or "",
             "scene": info.get("scene") or "",
             "unsaved": bool(info.get("unsaved")),
             "time": time.time(),
-            "plugin": "1.0.1",
+            "plugin": "1.3.0",
         })
         self.last_heartbeat = time.time()
 
@@ -200,8 +202,11 @@ class AquaGuardClient:
         try:
             info = {
                 "file": bpy.data.filepath or "",
+                "project": bpy.data.filepath or "",
                 "scene": bpy.context.scene.name if bpy.context.scene else "",
                 "unsaved": bool(bpy.data.is_dirty),
+                # 对象清单：供主程序做快照差异对比（限制 300 个，避免大场景拖慢主线程）
+                "objects": [o.name for o in bpy.data.objects[:300]],
             }
             with self._scene_lock:
                 self._scene_cache = info

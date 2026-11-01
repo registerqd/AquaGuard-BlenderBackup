@@ -10,6 +10,13 @@ const WatchdogServer = require('./tcp-server');
 const snapshot = require('./snapshot');
 const blender = require('./blender');
 const autostart = require('./autostart');
+const chunkStore = require('./chunk-store');
+const projects = require('./projects');
+const { Monitor } = require('./monitor');
+
+// 无头模式：渲染农场 / 服务器上只跑守护，不创建窗口
+const HEADLESS = process.argv.includes('--headless') || process.env.AQUAGUARD_HEADLESS === '1';
+const monitor = new Monitor();
 
 const APP_NAME = 'AquaGuard 青羽守护';
 const isHiddenStart = process.argv.includes('--hidden');
@@ -562,6 +569,99 @@ function registerIpc() {
 
   ipcMain.handle('log:get', () => logger.recent(300));
 
+  /* ---------- 增量快照 / 多工程 / 监控 ---------- */
+
+  // 资源占用（内存、CPU、运行时长）
+  ipcMain.handle('monitor:get', () => monitor.snapshot());
+
+  // 已守护的工程列表
+  ipcMain.handle('project:list', () => projects.listProjects());
+
+  // 某工程的时间轴（快照清单，倒序）
+  ipcMain.handle('snap:list', (_e, blendPath) => {
+    if (!blendPath) return [];
+    return projects.listManifests(blendPath).map((m) => ({
+      file: m._manifestFile,
+      createdAt: m.createdAt,
+      size: m.size,
+      blockCount: m.blockCount,
+      newBlocks: m.newBlocks,
+      reusedBlocks: m.reusedBlocks,
+      dedupRatio: m.dedupRatio,
+      objects: m.objects || [],
+      thumb: m.thumb || '',
+      note: m.note || ''
+    }));
+  });
+
+  // 从某个快照里恢复出完整 .blend
+  ipcMain.handle('snap:restore', async (_e, blendPath, manifestFile) => {
+    try {
+      const list = projects.listManifests(blendPath);
+      const m = list.find((x) => x._manifestFile === manifestFile);
+      if (!m) return { ok: false, error: '找不到该快照' };
+      const { recoverDir } = config.getEffectivePaths();
+      fs.mkdirSync(recoverDir, { recursive: true });
+      const base = path.basename(blendPath, path.extname(blendPath));
+      const stamp = new Date(m.createdAt || Date.now())
+        .toISOString()
+        .replace(/[-:T]/g, '')
+        .slice(0, 14);
+      const out = path.join(recoverDir, `${base}_${stamp}.blend`);
+      const r = chunkStore.restoreFile(projects.chunkDir(blendPath), m, out);
+      if (!r.ok) return { ok: false, error: `缺失 ${r.missing.length} 个数据块`, missing: r.missing };
+      monitor.event('restore', out);
+      return { ok: true, path: out };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
+
+  // 两个快照的对象级差异（新增 / 删除 / 保留）
+  ipcMain.handle('snap:diff', (_e, blendPath, fileA, fileB) => {
+    const list = projects.listManifests(blendPath);
+    const a = list.find((x) => x._manifestFile === fileA);
+    const b = list.find((x) => x._manifestFile === fileB);
+    if (!a || !b) return { ok: false, error: '快照不存在' };
+    const setA = new Set((a.objects || []).map((o) => (typeof o === 'string' ? o : o.name)));
+    const setB = new Set((b.objects || []).map((o) => (typeof o === 'string' ? o : o.name)));
+    return {
+      ok: true,
+      added: Array.from(setB).filter((n) => !setA.has(n)),
+      removed: Array.from(setA).filter((n) => !setB.has(n)),
+      kept: Array.from(setB).filter((n) => setA.has(n)).length
+    };
+  });
+
+  // 块仓库统计 + 垃圾回收
+  ipcMain.handle('snap:stats', (_e, blendPath) => {
+    if (!blendPath) return { files: 0, bytes: 0 };
+    return chunkStore.storeStats(projects.chunkDir(blendPath));
+  });
+
+  ipcMain.handle('snap:gc', (_e, blendPath) => {
+    if (!blendPath) return { removed: 0, freedBytes: 0 };
+    const manifests = projects.listManifests(blendPath);
+    const r = chunkStore.gc(projects.chunkDir(blendPath), manifests);
+    monitor.event('gc', `释放 ${(r.freedBytes / 1048576).toFixed(1)} MB`);
+    return r;
+  });
+
+  // 崩溃现场记录
+  ipcMain.handle('crash:list', () => {
+    const { snapshotDir } = config.getEffectivePaths();
+    return monitor.listCrashes(path.join(snapshotDir, 'crashes'));
+  });
+
+  ipcMain.handle('crash:dump', () => {
+    const { snapshotDir } = config.getEffectivePaths();
+    return monitor.dumpCrash(path.join(snapshotDir, 'crashes'), { reason: 'manual' });
+  });
+
+  // 最近事件流（崩溃现场预览）
+  ipcMain.handle('monitor:events', (_e, limit) => monitor.recent(limit || 40));
+
+
   ipcMain.handle('win:is-maximized', () => (win ? win.isMaximized() : false));
   ipcMain.on('win:minimize', () => win && win.minimize());
   ipcMain.on('win:hide', () => win && win.hide());
@@ -611,8 +711,19 @@ app.whenReady().then(() => {
   logger.info(`${APP_NAME} v${app.getVersion()} 启动`);
 
   registerIpc();
-  createWindow();
-  createTray();
+
+  // 资源占用采样 + 崩溃现场环形缓冲
+  monitor.start((snap) => {
+    if (snap.rssMB > 512) monitor.event('mem-high', snap.rssMB + ' MB');
+  });
+  monitor.event('boot', `${APP_NAME} v${app.getVersion()}${HEADLESS ? '（无头模式）' : ''}`);
+
+  if (HEADLESS) {
+    logger.info('无头模式启动：不创建窗口，仅运行看门狗（适用于渲染农场）');
+  } else {
+    createWindow();
+    createTray();
+  }
 
   // 首次启动默认开启看门狗
   startWatchdog();

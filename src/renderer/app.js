@@ -509,3 +509,203 @@ boot();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
   else load();
 })();
+
+/* ---------------- 快照浏览器 / 资源占用 / 崩溃现场 ---------------- */
+(function initSnapshotBrowser() {
+  if (!api) return;
+
+  let currentProject = '';
+  let selected = [];
+
+  /* ---- 资源占用条（插到顶栏下方） ---- */
+  const resBar = document.createElement('div');
+  resBar.className = 'res-bar';
+  resBar.id = 'resBar';
+  resBar.innerHTML = '<span>内存 <b id="resMem">—</b></span>' +
+                     '<span>CPU <b id="resCpu">—</b></span>' +
+                     '<span>常驻 <b id="resUp">—</b></span>' +
+                     '<span>工程 <b id="resProj">—</b></span>';
+  const topbar = document.querySelector('.topbar');
+  if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(resBar, topbar.nextSibling);
+
+  async function tickResource() {
+    try {
+      const m = await api.getMonitor();
+      const mem = document.getElementById('resMem');
+      const cpu = document.getElementById('resCpu');
+      const up = document.getElementById('resUp');
+      if (mem) mem.textContent = m.rssMB + ' MB';
+      if (cpu) cpu.textContent = (m.cpuPercent < 0.1 ? '空闲 0%' : m.cpuPercent + '%');
+      if (up) {
+        const h = Math.floor(m.uptimeSec / 3600);
+        const min = Math.floor((m.uptimeSec % 3600) / 60);
+        up.textContent = h > 0 ? h + ' 小时 ' + min + ' 分' : min + ' 分';
+      }
+    } catch (e) {}
+  }
+  tickResource();
+  setInterval(tickResource, 2000);
+
+  /* ---- 工程下拉 ---- */
+  async function loadProjects() {
+    const sel = document.getElementById('projectSelect');
+    if (!sel) return;
+    let list = [];
+    try { list = await api.listProjects(); } catch (e) { list = []; }
+    sel.innerHTML = '';
+    if (!list.length) {
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = '（暂无工程，先在 Blender 里连一次）';
+      sel.appendChild(o);
+      return;
+    }
+    list.forEach((p) => {
+      const o = document.createElement('option');
+      o.value = p.blendPath || '';
+      o.textContent = p.name + '（' + p.snapshots + ' 份快照）';
+      sel.appendChild(o);
+    });
+    if (!currentProject) currentProject = list[0].blendPath || '';
+    sel.value = currentProject;
+    sel.onchange = () => {
+      currentProject = sel.value;
+      selected = [];
+      loadTimeline();
+      loadStats();
+    };
+  }
+
+  /* ---- 时间轴 ---- */
+  async function loadTimeline() {
+    const box = document.getElementById('snapTimeline');
+    if (!box) return;
+    if (!currentProject) {
+      box.innerHTML = '<div class="modal-note">还没有可浏览的快照。</div>';
+      return;
+    }
+    let list = [];
+    try { list = await api.listSnapshots(currentProject); } catch (e) { list = []; }
+    const cnt = document.getElementById('snapCount');
+    if (cnt) cnt.textContent = list.length;
+    if (!list.length) {
+      box.innerHTML = '<div class="modal-note">该工程还没有增量快照。</div>';
+      return;
+    }
+    box.innerHTML = '';
+    list.forEach((s, i) => {
+      const d = new Date(s.createdAt || Date.now());
+      const item = document.createElement('div');
+      item.className = 'snap-item';
+      item.dataset.file = s.file;
+      const savedMB = ((s.newBlocks || 0) * 4).toFixed(1);
+      item.innerHTML =
+        '<div class="snap-dot"></div>' +
+        '<div class="snap-main">' +
+          '<div class="snap-time">' + d.toLocaleString() + '</div>' +
+          '<div class="snap-meta">全量 ' + (s.size / 1048576).toFixed(1) + ' MB · 本次新增 ' +
+          savedMB + ' MB · 去重率 ' + Math.round((s.dedupRatio || 0) * 100) + '%</div>' +
+        '</div>' +
+        (i === 0 ? '<span class="snap-tag">最新</span>' : '') +
+        '<button class="snap-act">恢复</button>';
+      item.onclick = (ev) => {
+        if (ev.target.classList.contains('snap-act')) return;
+        if (item.classList.contains('selected')) {
+          item.classList.remove('selected');
+          selected = selected.filter((f) => f !== s.file);
+        } else {
+          if (selected.length >= 2) {
+            const first = box.querySelector('.snap-item.selected');
+            if (first) first.classList.remove('selected');
+            selected.shift();
+          }
+          item.classList.add('selected');
+          selected.push(s.file);
+        }
+      };
+      item.querySelector('.snap-act').onclick = async (ev) => {
+        ev.stopPropagation();
+        if (!confirm('把这份快照恢复成一个新的 .blend 文件？')) return;
+        const r = await api.restoreSnapshot(currentProject, s.file);
+        alert(r.ok ? '已恢复到：' + r.path : '恢复失败：' + r.error);
+        if (r.ok) loadTimeline();
+      };
+      box.appendChild(item);
+    });
+  }
+
+  async function loadStats() {
+    const el = document.getElementById('snapStoreSize');
+    if (!el || !currentProject) return;
+    try {
+      const st = await api.snapshotStats(currentProject);
+      el.textContent = (st.bytes / 1048576).toFixed(1) + ' MB / ' + st.files + ' 块';
+    } catch (e) {
+      el.textContent = '—';
+    }
+  }
+
+  /* ---- 差异对比 ---- */
+  const btnDiff = document.getElementById('btnDiff');
+  if (btnDiff) {
+    btnDiff.onclick = async () => {
+      const box = document.getElementById('diffResult');
+      if (selected.length !== 2) {
+        box.innerHTML = '<span class="same">请先在时间轴里选中两份快照</span>';
+        return;
+      }
+      const r = await api.diffSnapshots(currentProject, selected[0], selected[1]);
+      if (!r.ok) {
+        box.innerHTML = '<span class="del">' + r.error + '</span>';
+        return;
+      }
+      box.innerHTML =
+        '<div class="add">新增对象（' + r.added.length + '）：' + (r.added.join('、') || '无') + '</div>' +
+        '<div class="del">消失对象（' + r.removed.length + '）：' + (r.removed.join('、') || '无') + '</div>' +
+        '<div class="same">保持不变：' + r.kept + ' 个</div>';
+    };
+  }
+
+  const btnRefresh = document.getElementById('btnSnapRefresh');
+  if (btnRefresh) btnRefresh.onclick = () => { loadProjects(); loadTimeline(); loadStats(); };
+
+  const btnGc = document.getElementById('btnSnapGc');
+  if (btnGc) {
+    btnGc.onclick = async () => {
+      if (!currentProject) return;
+      if (!confirm('清理所有快照都不再引用的数据块？此操作不可撤销。')) return;
+      const r = await api.gcSnapshots(currentProject);
+      alert('已清理 ' + r.removed + ' 个块，释放 ' + (r.freedBytes / 1048576).toFixed(1) + ' MB');
+      loadStats();
+    };
+  }
+
+  /* ---- 崩溃现场 ---- */
+  async function loadCrashes() {
+    const box = document.getElementById('crashList');
+    if (!box) return;
+    let list = [];
+    try { list = await api.listCrashes(); } catch (e) { list = []; }
+    if (!list.length) {
+      box.innerHTML = '<div class="modal-note">暂无崩溃现场记录。记录会在异常退出时自动生成。</div>';
+      return;
+    }
+    box.innerHTML = '';
+    list.slice(0, 10).forEach((c) => {
+      const div = document.createElement('div');
+      div.className = 'crash-item';
+      const res = c.resource || {};
+      div.innerHTML = '<b>' + (c.at || c.name) + '</b><br>' +
+        '崩溃前内存 ' + (res.rssMB || '—') + ' MB · CPU ' + (res.cpuPercent || 0) + '% · ' +
+        '记录了 ' + c.events + ' 条事件';
+      box.appendChild(div);
+    });
+  }
+
+  const navSnap = document.querySelector('[data-page="snapshots"]');
+  if (navSnap) navSnap.addEventListener('click', () => { loadProjects(); loadTimeline(); loadStats(); });
+  const navLogs = document.querySelector('[data-page="logs"]');
+  if (navLogs) navLogs.addEventListener('click', loadCrashes);
+
+  setTimeout(() => { loadProjects(); loadTimeline(); loadStats(); }, 800);
+})();

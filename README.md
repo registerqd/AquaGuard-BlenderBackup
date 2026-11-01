@@ -1,229 +1,281 @@
-# AquaGuard — Blender Crash Recovery Watchdog
+# AquaGuard
+
+**Blender 崩溃救不回工程？这个跑在 Blender 外面的看门狗，让你最坏只丢 2 分钟。**
+
+[![Build & Release](https://github.com/registerqd/AquaGuard-BlenderBackup/actions/workflows/build.yml/badge.svg)](https://github.com/registerqd/AquaGuard-BlenderBackup/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/registerqd/AquaGuard-BlenderBackup?color=16a3a8)](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/registerqd/AquaGuard-BlenderBackup/total?color=blue)](https://github.com/registerqd/AquaGuard-BlenderBackup/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#下载)
+[![Blender](https://img.shields.io/badge/Blender-2.93%20--%204.x-orange.svg)](#)
 
 <p align="center">
-  <img src="assets/aquaguard-demo.gif" alt="AquaGuard demo — heartbeat monitor, rotating A/B/C snapshots, recovery after a Blender freeze" width="880" style="max-width: 100%; border-radius: 8px;" />
+  <img src="界面预览.png" alt="AquaGuard 界面" width="860" style="max-width:100%;border-radius:10px" />
 </p>
 
 <p align="center">
-  <a href="https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest"><img src="https://img.shields.io/badge/Download-Latest%20Release-16a3a8.svg" alt="Download"></a>
-  <img src="https://img.shields.io/badge/Version-v1.2.0-blue.svg" alt="Version 1.2.0">
-  <img src="https://img.shields.io/badge/Blender-2.93%20--%204.x-orange.svg" alt="Blender Support">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT">
-</p>
-
-<p align="center">
-  <b>Never lose a Blender project to a crash, freeze, or sudden power outage again.</b><br>
-  A lightweight watchdog running <b>outside</b> the Blender process — A/B/C rotating snapshots, TCP heartbeat, PING probe to avoid false alarms.
-</p>
-
-<p align="center">
-  <a href="#english">English</a> ·
-  <a href="#中文说明">简体中文</a> ·
-  <a href="#faq">FAQ</a>
-</p>
-
----
-
-## Download
-
-| Platform | Package | Notes |
-|---|---|---|
-| **Windows 10 / 11** | [`AquaGuard_Setup_1.2.0.exe`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard_Setup_1.2.0.exe) | Installer, ~73 MB |
-| **Linux x64** | [`AquaGuard-linux-x64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | Portable, ~102 MB |
-| **macOS (Apple Silicon)** | [`AquaGuard-macos-arm64.dmg`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | Disk image, ~97 MB |
-
-All releases: [github.com/registerqd/AquaGuard-BlenderBackup/releases](https://github.com/registerqd/AquaGuard-BlenderBackup/releases)
-
-<p align="center">
-  <img src="界面预览.png" alt="AquaGuard interface" width="820" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+  <a href="#下载">下载</a> ·
+  <a href="#三分钟上手">三分钟上手</a> ·
+  <a href="#它到底解决了什么">它解决什么</a> ·
+  <a href="#130-新增">1.3.0 新增</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="#english">English</a>
 </p>
 
 ---
 
-<a name="english"></a>
-## English
+## 它到底解决了什么
 
-### New in 1.2.0
+Blender 崩溃的时候，**跑在 Blender 进程里的东西会一起死掉**——包括它自带的自动保存、包括所有插件。
 
-- **16 interface languages**: Simplified Chinese, Traditional Chinese, English, Japanese, Korean, French, German, Spanish, Portuguese (Brazil), Russian, Italian, Polish, Turkish, Arabic (with RTL layout), Hindi and Indonesian. Switch instantly from Settings and the choice is remembered.
-- **7 theme palettes**: Aqua, Violet, Amber, Forest, Rose, Ocean and Graphite. One click on a colour dot re-skins the whole window and persists across launches.
+雕刻到第 5 个小时，内存爆了，Blender 白屏无响应，你强杀进程，然后发现自动保存停在两小时前。这种情况每个月都会发生一次。
 
-### What is AquaGuard?
+AquaGuard 是一个**跑在 Blender 外面的独立程序**。Blender 死了，它还活着，你最近的进度已经在硬盘上了。
 
-AquaGuard is a lightweight desktop watchdog that runs **completely outside of Blender**. It maintains rolling project snapshots and monitors a live heartbeat over a local TCP connection. When Blender freezes, crashes, or the machine suddenly loses power, your work is already safely written to disk.
-
-### Built for My Dad
-
-My dad sculpts figurines in Blender — complex models with tens of thousands of faces. Out-of-memory crashes and freezes used to happen regularly, meaning hours of sculpting were wiped out in an instant. So I built this watchdog for him.
-
-Now, whenever Blender locks up, he simply terminates the hung process and restarts. The watchdog immediately detects the state, stages the latest snapshot, and reopens it. The fear of *"when was my last save?"* is completely gone.
-
-### Proven by a Real 5-Hour Power Cut
-
-During a 5-hour continuous modeling session, my computer suddenly lost power. Upon rebooting, AquaGuard launched with the system, detected the ungraceful shutdown flag, and prompted: *"Would you like to recover your project?"*
-
-The entire scene was restored from the latest snapshot without a single byte lost. It asks exactly once, updates the state flag, and stays silent on future boots.
-
-### How Reliable Is It?
-
-> **Worst case: you lose the last 2 minutes — not the last 5 hours.**
-
-The watchdog dispatches a snapshot command (`CF`) every 60 seconds. The add-on persists a snapshot every 2 commands (default: 2 minutes). Three snapshots (`A.blend`, `B.blend`, `C.blend`) rotate on disk, ensuring disk space remains bounded (~3× project size) while keeping 3 historical recovery points.
-
-### Why Not Just Use Blender's Built-in Autosave or Add-ons?
-
-When Blender crashes, **everything running inside the Blender process dies with it**.
-
-| Feature | Blender AutoSave | Regular Add-on | AquaGuard Watchdog |
+| 场景 | Blender 自带自动保存 | 普通插件 | **AquaGuard** |
 |---|---|---|---|
-| **Process Isolation** | ❌ Dies with Blender | ❌ Dies with Blender | ✅ **External watchdog process** |
-| **Sudden Power Outage** | ⚠️ Often corrupt or outdated | ❌ In-memory state lost | ✅ **Flagged on startup & 1-click recovery** |
-| **Silent Freeze / Hang** | ❌ Cannot detect itself | ❌ Thread blocked | ✅ **Heartbeat timeout + PING probe** |
-| **Recovery Workflow** | ⚠️ Hunt through `File -> Recover` | ⚠️ Manual file copying | ✅ **Native modal → Auto-open `61.blend...`** |
-| **History Retention** | Overwritten or temp wiped | Variable | ✅ **Guaranteed A/B/C rotation** |
+| 崩溃 / 闪退 | ⚠️ 一起死，临时文件常损坏 | ❌ 一起死 | ✅ **外部进程存活** |
+| 卡死无响应 | ❌ 自己检测不了自己 | ❌ 线程被阻塞 | ✅ **心跳超时 + PING 探测** |
+| 突然断电 | ⚠️ 多数时候文件已损坏 | ❌ 内存状态全丢 | ✅ **下次开机主动问你要不要恢复** |
+| 磁盘占用 | 不定，可能堆积 | 不定 | ✅ **增量存储，只存变化块** |
+| 历史版本 | 只有一份 | 要看实现 | ✅ **20 份时间轴，可单份取回** |
 
-### How It Works
+---
+
+## 1.3.0 新增
+
+### 🗜️ 增量快照——磁盘门槛下降一个数量级
+
+以前每份快照都是完整复制 `.blend`，恒定占用 3 倍工程体积。**一个 40 GB 的雕刻工程要吃掉 120 GB，多数人到这里就放弃了。**
+
+1.3.0 改成内容寻址分块存储（CAS）：
+
+- 文件按 4 MB 切片，每片算 SHA-256，**同哈希只存一份**
+- 快照本身只记录一张块哈希清单（几 KB）
+- 雕刻场景通常只有局部网格在动，**实测增量体积约为全量的 2%~8%**
+
+40 GB 的工程，第二份快照开始通常只增加几百 MB，而不是再来 40 GB。
+
+### 🗂️ 同时守护多个工程
+
+以前一次只能盯一个 `.blend`，多开的人第二个就失效。现在每个工程按文件路径生成稳定 ID，各自持有独立快照链与块仓库，**三个 Blender 同时开也互不干扰**。
+
+### 🕐 快照浏览器
+
+时间轴列出每份快照：时间、全量体积、本次新增体积、去重率。可以：
+
+- **单份取回**：任意一份恢复成新的 `.blend`，不覆盖你当前工程
+- **差异预览**：选中两份，对比对象级变化——哪些是新增、哪些被删掉了，确认无误再恢复
+- **清理无引用块**：一键回收所有快照都不再引用的数据块
+
+这一步把 AquaGuard 从「灾后救命」升级成「日常版本管理」。
+
+### 📊 资源占用，直接写在界面上
+
+常驻后台的软件，第一个问题永远是「吃多少内存」。顶栏常驻显示：
+
+```
+内存 82.4 MB    CPU 空闲 0%    常驻 2 小时 13 分
+```
+
+不用你去任务管理器猜。
+
+### 💥 崩溃现场记录
+
+环形缓冲持续记录最近 30 秒发生了什么：心跳、CF 指令、内存峰值、Blender 状态。异常退出时自动落盘一份现场快照，事后能回答「它崩的时候到底在干什么」。
+
+### 🔍 恢复前 diff 预览
+
+恢复不再是盲选。对比两份快照的对象清单，先看清楚再动手。
+
+### 🌐 快照目录可指向 NAS / 网盘
+
+备份目录支持任意路径——指向 NAS 挂载点或 OneDrive / 坚果云同步盘，快照自动上云，机器烧了也还在。
+
+### 🖥️ 无头模式（渲染农场）
+
+```bash
+AquaGuard --headless
+```
+
+不开窗口，只跑守护。适合渲染农场、无 GUI 的 Linux 服务器。
+
+---
+
+## 下载
+
+| 平台 | 文件 | 说明 |
+|---|---|---|
+| **Windows 10/11** | [`AquaGuard_Setup_x.y.z.exe`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | 安装版，推荐 |
+| **Windows 便携** | [`AquaGuard_Setup_x.y.z.zip`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | 解压即用 |
+| **Linux x64** | [`AquaGuard-x.y.z-linux-x86_64.AppImage`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | 双击即用 |
+| **Linux x64** | [`AquaGuard-x.y.z-linux-x64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | 解压后 `chmod +x AquaGuard` |
+| **macOS (Apple Silicon)** | [`AquaGuard-x.y.z-mac-arm64.dmg`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | 首次打开需右键 → 打开 |
+
+校验文件：`SHA256SUMS.txt`（同页下载）
+
+**系统要求**：Blender 2.93 – 4.x · Windows 10/11 / Linux x64 / macOS (arm64) · 快照目录留出工程体积 1.2 倍以上的空间（增量存储后远低于以前）
+
+---
+
+## 三分钟上手
+
+### 第 1 步：装主程序
+
+- **Windows**：双击 `AquaGuard_Setup_x.y.z.exe`，一路下一步。建议勾选「开机自动启动」。
+- **Linux**：解压后 `chmod +x AquaGuard && ./AquaGuard`
+- **macOS**：解压 dmg，右键 App → 打开（第一次会被 Gatekeeper 拦，这是正常的）
+
+装完托盘里会有一个青色小图标，它已经在守着了。
+
+### 第 2 步：装 Blender 插件
+
+1. 打开 AquaGuard → 左侧「**Blender 插件**」→ 点「**导出插件文件**」
+2. 打开 Blender → `编辑 / Edit` → `偏好设置 / Preferences` → `插件 / Add-ons` → 右上角 `安装 / Install`
+3. 选中刚导出的 `aqua_guard_addon.py`，然后在列表里勾选启用 **AquaGuard**
+
+连上的瞬间，AquaGuard 右上角会从「Blender 未连接」变成绿色「**Blender 已连接**」。
+
+### 第 3 步：正常干活
+
+什么都不用做。想看状态就在 3D 视图按 `N`，侧边栏有 AquaGuard 面板：连接状态、心跳、手动存档、临时暂停。
+
+**出事了会怎样？** Blender 卡死或崩溃时，桌面会弹一个置顶窗口问你「要不要恢复」。点「立即恢复」，它会拉起最新快照继续工作。
+
+---
+
+## 它有多可靠
+
+> **最坏情况：丢最近 2 分钟，不是最近 5 小时。**
+
+看门狗每 60 秒下发一次 `CF` 存档指令，插件每收到 2 次真正落盘一次（默认 2 分钟一份快照）。
+
+告警前会先发 **PING 探测**：Blender 在跑重度渲染、烘焙、保存超大文件时主线程会卡顿几秒，直接判死会误杀正在渲染的工程。插件只要响应 PING，警报立刻解除。
+
+**它从不主动杀进程。** 弹窗里点「立即恢复」才由你确认终止。
+
+---
+
+## 工作原理
 
 ```text
 ┌────────────────────────┐     TCP 127.0.0.1:47831      ┌────────────────────────┐
-│   AquaGuard Watchdog   │ ─── Save Command (60s) ────► │     Blender Add-on     │
-│  (Desktop Background)  │ ◄─── Heartbeat (10s) ─────── │  (Dedicated NetThread) │
+│   AquaGuard 看门狗      │ ─── CF 存档指令（60s） ────► │   Blender 插件          │
+│   （独立桌面进程）       │ ◄─── HB 心跳（10s） ─────── │   （独立网络线程）       │
 └────────────────────────┘                              └────────────────────────┘
             │                                                        │
-            │  Missed ≥ 2 Heartbeats                                 │ Every 2 Commands:
-            │  -> Dispatches PING Probe                              ▼
-            │  -> Still silent?                                 Persist C.blend
-            ▼                                                   Rotate C -> B -> A
-     Native Alert Dialog                                        (Max 3 snapshots)
+            │  连续 2 次没心跳                                        │  每 2 次 CF：
+            │  → 发 PING 探测                                        ▼
+            │  → 仍无响应？                                     增量落盘（分块去重）
+            ▼                                                  写入时间轴清单
+     系统级置顶弹窗                                              （保留最近 20 份）
             │
-            ├─► Click [Recover Now]:
-            │     Terminate hung Blender -> Copy latest snapshot to 61.blend -> Auto Open
-            └─► Click [Ignore]:
-                  Suppresses alarm and resets timer
+            ├─► 点【立即恢复】：终止卡死的 Blender → 从块仓库重组最新快照 → 自动打开
+            └─► 点【忽略】：抑制告警并重置计时
 ```
 
-### Requirements
+### 数据存在哪
 
-- **Blender** 2.93 – 4.x (add-on is pure Python, no build step)
-- **Windows** 10/11, **Linux** x64, or **macOS** (Apple Silicon)
-- ~3× your project size in free disk space for the snapshot slots
-
-### Installation
-
-#### 1. Watchdog App
-
-**Windows** — run `AquaGuard_Setup_1.2.0.exe`, follow the wizard. Enabling **Launch at startup** is recommended.
-
-**Linux** — unpack and run:
-
-```bash
-tar -xzf AquaGuard-linux-x64.tar.gz
-cd AquaGuard-linux-x64
-chmod +x AquaGuard
-./AquaGuard
-```
-
-> If the archive was extracted through a file manager that strips the executable bit, `chmod +x AquaGuard` fixes it. On Wayland desktops you may need `--ozone-platform=wayland` for correct window placement.
-
-**macOS** — unpack, then right-click → **Open** the first time to pass Gatekeeper:
-
-```bash
-tar -xzf AquaGuard-macos-arm64.tar.gz
-cd AquaGuard-macos-arm64
-xattr -dr com.apple.quarantine AquaGuard.app
-open AquaGuard.app
-```
-
-#### 2. Blender Add-on
-
-1. Open AquaGuard, go to the **Blender Add-on** tab, click **Export Add-on**.
-2. In Blender: `Edit → Preferences → Add-ons → Install...`, pick `aqua_guard_addon.py`, enable **AquaGuard**.
-3. Press `N` in the 3D Viewport to open the **AquaGuard** sidebar panel.
-
----
-
-<a name="中文说明"></a>
-## 中文说明
-
-### 1.2.0 新增
-
-- **16 种界面语言**：简体中文、繁體中文、English、日本語、한국어、Français、Deutsch、Español、Português (Brasil)、Русский、Italiano、Polski、Türkçe、العربية（含 RTL 布局）、हिन्दी、Indonesia。在「设置 → 外观」中即时切换，选择会被记住。
-- **7 套主题配色**：青碧、幽紫、暖橙、松绿、玫红、深海、石墨。点一下色点即可整窗换肤，重启后保持。
-
-### 它解决什么问题
-
-Blender 崩溃、卡死、断电时，**跑在 Blender 进程里的自动保存和插件会一起死掉**。AquaGuard 是一个跑在 Blender **外部**的独立看门狗进程：Blender 死了，它还活着，你最近的进度已经在硬盘上了。
-
-### 核心亮点
-
-- **独立进程守护**：Blender 就算崩成白屏、无响应或直接闪退，外部看门狗依然存活。
-- **A / B / C 三槽轮转快照**：磁盘空间始终恒定（仅占 3 份工程体积），最老的一份自动淘汰，永远保留最新三档进度。
-- **PING 探针防误杀**：Blender 在高负荷烘焙、重度渲染或存大文件时主线程易卡顿，看门狗在告警前主动发送 PING 探测，插件响应即解除，绝不误杀正在渲染的工程。
-- **开机断电自愈**：断电关机前标记会话；下次开机自启弹窗询问是否打开断电前工程，确认后自动按 `61.blend`、`62.blend`… 递增另存，原工程零污染。
-- **无缝打开**：无需配置 Blender 安装路径，直接调用系统关联默认程序启动恢复文件。
-
-### 怎么使用
-
-1. **运行主程序**：安装并启动 AquaGuard，托盘常驻。
-2. **安装插件**：在主程序「Blender 插件」页点击导出，在 Blender「偏好设置 → 插件」里安装并启用。
-3. **日常工作**：像平时一样建模、雕刻、渲染。3D 视图按 `N` 键可在侧边栏查看心跳与快照状态，也可随时手动点击「立即快照」。
-4. **遇险恢复**：一旦遭遇崩溃或卡死，系统级原生弹窗自动置顶弹出，点击「立即恢复」即可一键拉起最新快照继续工作。
-
-### 存储路径
-
-| 文件类型 | 默认存放位置 |
+| 内容 | 默认位置 |
 |---|---|
-| **轮转快照（A/B/C）** | 我的文档 `AquaGuard备份/` |
-| **灾后恢复文件（61/62...）** | 我的文档 `AquaGuard备份/` |
-| **程序配置文件** | `%APPDATA%\AquaGuard\config.json`（Linux: `~/.config/AquaGuard/`） |
-| **运行日志** | `%APPDATA%\AquaGuard\logs\aquaguard.log` |
+| 增量块仓库 + 时间轴 | 我的文档 `AquaGuard备份/projects/<工程ID>/` |
+| 恢复出来的文件 | 我的文档 `AquaGuard备份/` |
+| 崩溃现场记录 | 我的文档 `AquaGuard备份/crashes/` |
+| 程序配置 | Windows `%APPDATA%\AquaGuard\config.json`，Linux `~/.config/AquaGuard/` |
+| 运行日志 | 同上目录 `logs/aquaguard.log` |
+
+**卸载程序不会删你的快照**，它们独立存放。
 
 ---
 
-<a name="faq"></a>
 ## FAQ
 
 **Q：会不会把硬盘塞满？**
-不会。只有 A/B/C 三个槽位，写满后自动覆盖最老的一份，占用恒定在约 3 倍工程体积。
+不会。A/B/C 三槽轮转 + 增量分块，占用恒定在「工程体积 + 少量增量」。时间轴默认保留最近 20 份，更早的自动淘汰。
 
-**Q：我在跑长渲染，它会不会误判成崩溃把 Blender 杀了？**
-不会。看门狗在弹告警前会先发 PING 探针，插件只要响应就解除警报。而且它**从不主动杀进程**——弹窗里点「立即恢复」才由你确认终止。
+**Q：增量快照会不会因为丢块导致恢复失败？**
+恢复前会校验块完整性，缺块会明确告诉你缺几个、而不是给你一个坏文件。界面上还有「清理无引用块」，只会删没有任何快照引用的块。
 
-**Q：和 Blender 自带的 Auto Save 有什么区别？**
-自带自动保存在 Blender 进程内，Blender 崩了它就停了，且断电时临时文件经常损坏。AquaGuard 在进程外，并且断电前会写会话标记，下次开机主动问你要不要恢复。
+**Q：跑长渲染时会不会被误判成崩溃？**
+不会。告警前先发 PING 探测，插件响应即解除。而且它从不主动杀进程，必须你点确认。
 
 **Q：支持 Blender 4.x 吗？**
 支持 2.93 – 4.x。插件是纯 Python，不需要编译。
 
-**Q：快照保存在哪？能改吗？**
-默认在「我的文档/AquaGuard备份/」，可在主程序设置里改到其他盘。
+**Q：多开 Blender 会互相覆盖吗？**
+不会。每个工程按文件路径独立建链，三个工程三条时间轴。
 
-**Q：卸载后我的备份文件会被删吗？**
-不会，快照和恢复文件独立存放，卸载程序不碰它们。
+**Q：快照能放 NAS 或网盘吗？**
+可以，设置里把备份目录指过去就行。
+
+**Q：Linux 下解压后打不开？**
+多半是丢了执行权限，`chmod +x AquaGuard` 即可。Wayland 桌面可能需要 `--ozone-platform=wayland`。
+
+**Q：macOS 提示「无法验证开发者」？**
+右键 App → 打开，或 `xattr -dr com.apple.quarantine AquaGuard.app`。
 
 ---
 
-## Build from Source
+## 从源码构建
 
-基于 Electron + Node.js 与 Blender Python API 开发，Windows 下支持一键全自动打包：
-
-```bat
-:: 方式 A：一键无依赖打包（自动下载免安装 Node.js 与依赖）
-双击运行 "一键打包.bat"
-
-:: 方式 B：常规开发运行
+```bash
+git clone https://github.com/registerqd/AquaGuard-BlenderBackup.git
+cd AquaGuard-BlenderBackup
 npm install
-npm start
-
-:: 方式 C：构建安装包
-npm run dist:win
+npm start            # 开发运行
+npm run dist:win     # 打包 Windows 安装包
 ```
 
-## Contributing
+Windows 下也可以直接双击 `一键打包.bat`，脚本会自动准备 Node.js 与依赖。
 
-Issue 和 PR 都欢迎。报 bug 时请附上 `aquaguard.log` 里的相关片段和 Blender 版本号。
+三平台安装包由 GitHub Actions 在打 tag 时自动构建发布，见 [`.github/workflows/build.yml`](.github/workflows/build.yml)。
+
+---
+
+## 参与
+
+Issue 和 PR 都欢迎。报 bug 时请附上 `aquaguard.log` 的相关片段、Blender 版本号和操作系统。
+
+如果你觉得它救过你一次，给个 ⭐ 就是最好的支持。
 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<a name="english"></a>
+# English
+
+**A watchdog that runs outside Blender, so a crash costs you two minutes instead of five hours.**
+
+[![Build & Release](https://github.com/registerqd/AquaGuard-BlenderBackup/actions/workflows/build.yml/badge.svg)](https://github.com/registerqd/AquaGuard-BlenderBackup/actions/workflows/build.yml)
+
+### Why
+
+When Blender dies, everything inside its process dies with it, including its built-in autosave and every add-on. AquaGuard is a separate desktop process that keeps your work on disk no matter what happens to Blender.
+
+### What's new in 1.3.0
+
+- **Incremental snapshots** — content-addressed chunk storage. Files are split into 4 MB blocks and hashed; identical blocks are stored once. A 40 GB sculpt project used to cost 120 GB in snapshots, now the second snapshot onward adds a few hundred MB.
+- **Multiple projects** — each `.blend` gets its own snapshot chain and block store. Run three Blender instances at once without conflicts.
+- **Snapshot browser** — a timeline with size, incremental size and dedup ratio per snapshot. Restore any single snapshot, or diff two of them at object level before restoring.
+- **Resource readout** — memory and CPU shown right in the title bar. No more guessing from the task manager.
+- **Crash scene capture** — a 30 second ring buffer of events and memory, dumped to disk on abnormal exit.
+- **NAS / cloud folders** — point the snapshot directory at a NAS mount or a synced folder.
+- **Headless mode** — `AquaGuard --headless` for render farms and servers without a GUI.
+
+### Install
+
+1. Download the package for your platform from [Releases](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest).
+2. Open AquaGuard → **Blender Add-on** tab → **Export Add-on**.
+3. In Blender: `Edit → Preferences → Add-ons → Install...`, pick `aqua_guard_addon.py`, enable **AquaGuard**.
+4. Press `N` in the 3D Viewport for the AquaGuard sidebar panel.
+
+Worst case you lose the last two minutes. It never kills your process without asking.
+
+### Built for my dad
+
+He sculpts figurines with tens of thousands of faces. Out-of-memory crashes used to wipe out hours of work. This started as a tool for him, and a real 5-hour session interrupted by a power cut is what proved the recovery path works.
+
+MIT licensed. Issues and PRs welcome.

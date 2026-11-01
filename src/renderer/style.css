@@ -26,6 +26,82 @@
   --font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
 }
 
+/* ============================================================
+   主题配色（7 套）— 通过 html[data-theme] 切换
+   ============================================================ */
+
+html[data-theme="violet"] {
+  --bg-deep: #120a1f; --bg-mid: #1b1030;
+  --panel: rgba(38, 22, 62, 0.72); --panel-2: rgba(50, 30, 80, 0.55);
+  --line: rgba(178, 132, 255, 0.18); --line-strong: rgba(178, 132, 255, 0.45);
+  --cyan: #b284ff; --cyan-soft: #cfaaff; --mint: #e6d4ff;
+  --teal: #8b5cf6; --blue: #a78bfa;
+  --text: #f0e8ff; --text-dim: #b9a6d4; --text-mute: #8b7aa6;
+}
+
+html[data-theme="amber"] {
+  --bg-deep: #1a1008; --bg-mid: #26180c;
+  --panel: rgba(58, 36, 16, 0.72); --panel-2: rgba(74, 46, 20, 0.55);
+  --line: rgba(255, 176, 80, 0.18); --line-strong: rgba(255, 176, 80, 0.45);
+  --cyan: #ffb050; --cyan-soft: #ffc983; --mint: #ffe4bd;
+  --teal: #f59e0b; --blue: #fbbf24;
+  --text: #fff3e3; --text-dim: #d3b391; --text-mute: #a68a6b;
+}
+
+html[data-theme="forest"] {
+  --bg-deep: #07160f; --bg-mid: #0b2216;
+  --panel: rgba(14, 44, 28, 0.72); --panel-2: rgba(20, 58, 36, 0.55);
+  --line: rgba(94, 224, 138, 0.18); --line-strong: rgba(94, 224, 138, 0.45);
+  --cyan: #5ee08a; --cyan-soft: #8deda9; --mint: #c6ffd8;
+  --teal: #22c55e; --blue: #34d399;
+  --text: #e6fff0; --text-dim: #94bfa5; --text-mute: #6b8f79;
+}
+
+html[data-theme="rose"] {
+  --bg-deep: #1a0a13; --bg-mid: #26101d;
+  --panel: rgba(60, 20, 40, 0.72); --panel-2: rgba(78, 28, 52, 0.55);
+  --line: rgba(255, 122, 176, 0.18); --line-strong: rgba(255, 122, 176, 0.45);
+  --cyan: #ff7ab0; --cyan-soft: #ffa3c8; --mint: #ffd6e6;
+  --teal: #f43f8e; --blue: #fb7185;
+  --text: #ffeaf3; --text-dim: #d4a3b8; --text-mute: #a67b8c;
+}
+
+html[data-theme="ocean"] {
+  --bg-deep: #050f24; --bg-mid: #0a1a38;
+  --panel: rgba(14, 36, 72, 0.72); --panel-2: rgba(20, 48, 92, 0.55);
+  --line: rgba(96, 165, 250, 0.18); --line-strong: rgba(96, 165, 250, 0.45);
+  --cyan: #60a5fa; --cyan-soft: #93c5fd; --mint: #dbeafe;
+  --teal: #3b82f6; --blue: #38bdf8;
+  --text: #e8f2ff; --text-dim: #94b0d4; --text-mute: #6b85a6;
+}
+
+html[data-theme="graphite"] {
+  --bg-deep: #101214; --bg-mid: #171a1d;
+  --panel: rgba(34, 38, 42, 0.78); --panel-2: rgba(44, 49, 54, 0.6);
+  --line: rgba(200, 210, 220, 0.14); --line-strong: rgba(200, 210, 220, 0.36);
+  --cyan: #d5dde5; --cyan-soft: #e8eef4; --mint: #ffffff;
+  --teal: #9aa7b4; --blue: #b8c4d0;
+  --text: #eef2f6; --text-dim: #a5b0bb; --text-mute: #78838e;
+}
+
+/* 主题选择器 UI */
+.theme-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.theme-dot {
+  width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: transform .15s, border-color .15s;
+}
+.theme-dot:hover { transform: scale(1.12); }
+.theme-dot.active { border-color: var(--text); box-shadow: 0 0 0 3px var(--line-strong); }
+.lang-select {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--line-strong);
+  border-radius: 10px; padding: 8px 12px; font-size: 13px; outline: none; min-width: 180px;
+  font-family: var(--font);
+}
+.lang-select option { background: #0b1a20; color: #e2fbf8; }
+
+/* RTL 支持（阿拉伯语） */
+html[dir="rtl"] .shell { direction: rtl; }
+
 * {
   box-sizing: border-box;
   margin: 0;

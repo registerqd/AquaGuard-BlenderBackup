@@ -437,3 +437,75 @@ function startDemo() {
 }
 
 boot();
+
+/* ---------------- 外观：主题配色 + 界面语言 ---------------- */
+(function initAppearance() {
+  if (typeof i18n === 'undefined') return;
+
+  const THEME_COLORS = {
+    cyan: '#00e5d0', violet: '#b284ff', amber: '#ffb050', forest: '#5ee08a',
+    rose: '#ff7ab0', ocean: '#60a5fa', graphite: '#d5dde5'
+  };
+
+  function applyTheme(id) {
+    const t = id || 'cyan';
+    if (t === 'cyan') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+    document.querySelectorAll('.theme-dot').forEach((d) => {
+      d.classList.toggle('active', d.dataset.theme === t);
+    });
+  }
+
+  function buildThemeGrid(current) {
+    const grid = document.getElementById('themeGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    i18n.THEMES.forEach((t) => {
+      const dot = document.createElement('div');
+      dot.className = 'theme-dot';
+      dot.dataset.theme = t.id;
+      dot.title = t.name;
+      dot.style.background = THEME_COLORS[t.id] || '#00e5d0';
+      dot.addEventListener('click', async () => {
+        applyTheme(t.id);
+        if (api && api.setConfig) { try { await api.setConfig({ theme: t.id }); } catch (e) {} }
+      });
+      grid.appendChild(dot);
+    });
+    applyTheme(current);
+  }
+
+  function buildLangSelect(current) {
+    const sel = document.getElementById('langSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    i18n.LANGS.forEach((l) => {
+      const o = document.createElement('option');
+      o.value = l.code;
+      o.textContent = l.flag + '  ' + l.name;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+    sel.addEventListener('change', async () => {
+      i18n.set(sel.value);
+      if (api && api.setConfig) { try { await api.setConfig({ lang: sel.value }); } catch (e) {} }
+    });
+  }
+
+  async function load() {
+    let theme = 'cyan';
+    let lang = 'zh-CN';
+    if (api && api.getConfig) {
+      try {
+        const c = await api.getConfig();
+        if (c) { theme = c.theme || 'cyan'; lang = c.lang || 'zh-CN'; }
+      } catch (e) {}
+    }
+    buildThemeGrid(theme);
+    buildLangSelect(lang);
+    if (lang !== 'zh-CN') i18n.set(lang);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+  else load();
+})();

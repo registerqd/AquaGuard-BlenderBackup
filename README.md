@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest"><img src="https://img.shields.io/badge/Download-Latest%20Release-16a3a8.svg" alt="Download"></a>
-  <img src="https://img.shields.io/badge/Version-v1.1.0-blue.svg" alt="Version 1.1.0">
+  <img src="https://img.shields.io/badge/Version-v1.2.0-blue.svg" alt="Version 1.2.0">
   <img src="https://img.shields.io/badge/Blender-2.93%20--%204.x-orange.svg" alt="Blender Support">
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT">
@@ -29,9 +29,9 @@
 
 | Platform | Package | Notes |
 |---|---|---|
-| **Windows 10 / 11** | [`AquaGuard_Setup_1.1.0.exe`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard_Setup_1.1.0.exe) | Installer, ~73 MB |
-| **Linux x64** | [`AquaGuard-linux-x64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard-linux-x64.tar.gz) | Portable, ~102 MB |
-| **macOS (Apple Silicon)** | [`AquaGuard-macos-arm64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard-macos-arm64.tar.gz) | Portable, ~93 MB |
+| **Windows 10 / 11** | [`AquaGuard_Setup_1.2.0.exe`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest/download/AquaGuard_Setup_1.2.0.exe) | Installer, ~73 MB |
+| **Linux x64** | [`AquaGuard-linux-x64.tar.gz`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | Portable, ~102 MB |
+| **macOS (Apple Silicon)** | [`AquaGuard-macos-arm64.dmg`](https://github.com/registerqd/AquaGuard-BlenderBackup/releases/latest) | Disk image, ~97 MB |
 
 All releases: [github.com/registerqd/AquaGuard-BlenderBackup/releases](https://github.com/registerqd/AquaGuard-BlenderBackup/releases)
 
@@ -43,6 +43,11 @@ All releases: [github.com/registerqd/AquaGuard-BlenderBackup/releases](https://g
 
 <a name="english"></a>
 ## English
+
+### New in 1.2.0
+
+- **16 interface languages**: Simplified Chinese, Traditional Chinese, English, Japanese, Korean, French, German, Spanish, Portuguese (Brazil), Russian, Italian, Polish, Turkish, Arabic (with RTL layout), Hindi and Indonesian. Switch instantly from Settings and the choice is remembered.
+- **7 theme palettes**: Aqua, Violet, Amber, Forest, Rose, Ocean and Graphite. One click on a colour dot re-skins the whole window and persists across launches.
 
 ### What is AquaGuard?
 
@@ -108,7 +113,7 @@ When Blender crashes, **everything running inside the Blender process dies with 
 
 #### 1. Watchdog App
 
-**Windows** — run `AquaGuard_Setup_1.1.0.exe`, follow the wizard. Enabling **Launch at startup** is recommended.
+**Windows** — run `AquaGuard_Setup_1.2.0.exe`, follow the wizard. Enabling **Launch at startup** is recommended.
 
 **Linux** — unpack and run:
 
@@ -140,6 +145,11 @@ open AquaGuard.app
 
 <a name="中文说明"></a>
 ## 中文说明
+
+### 1.2.0 新增
+
+- **16 种界面语言**：简体中文、繁體中文、English、日本語、한국어、Français、Deutsch、Español、Português (Brasil)、Русский、Italiano、Polski、Türkçe、العربية（含 RTL 布局）、हिन्दी、Indonesia。在「设置 → 外观」中即时切换，选择会被记住。
+- **7 套主题配色**：青碧、幽紫、暖橙、松绿、玫红、深海、石墨。点一下色点即可整窗换肤，重启后保持。
 
 ### 它解决什么问题
 
